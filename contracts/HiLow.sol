@@ -17,12 +17,12 @@ contract HiLowGame is Ownable {
     }
 
     function play(bool isHigher, uint256 betSize) public returns (address rWinner, uint256 rBetSize) {
-        uint256 balanceOfPlayer = csCHIPToken.balanceOf(msg.sender);
-        require(balanceOfPlayer >= betSize, "You don't have enough CSCHIPs");
+        uint256 allowance = csCHIPToken.allowance(msg.sender, address(this));
+        require(allowance >= betSize, "Check the token allowance");
         uint256 balaceOfPool = csCHIPToken.balanceOf(address(this));
         require(balaceOfPool >= betSize, "Pool doesn't have enough CSCHIPs");
         
-        uint256 random = _randMod(10, balanceOfPlayer + balaceOfPool + betSize);
+        uint256 random = _randMod(10, allowance + balaceOfPool + betSize);
         bool isPlayerWin = isHigher ? random >= 5 : random <= 4;
         bool sent = false;
         address winner;
