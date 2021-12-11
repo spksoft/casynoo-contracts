@@ -11,7 +11,11 @@
   "license": "ISC",
   "devDependencies": {
     "@openzeppelin/contracts": "^4.4.0",
+    "@openzeppelin/test-environment": "^0.1.9",
+    "@openzeppelin/test-helpers": "^0.5.15",
     "@truffle/hdwallet-provider": "^2.0.0",
+    "chai": "^4.3.4",
+    "mocha": "^8.1.2",
     "truffle": "^5.4.23"
   }
 }
