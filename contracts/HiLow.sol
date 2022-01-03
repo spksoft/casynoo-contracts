@@ -90,7 +90,7 @@ contract HiLow is Ownable {
         return csCHIPToken.balanceOf(address(this));
     }
 
-    function transferFromPricePoolToOwner(uint amount) onlyOwner public returns (bool) {
+    function transferFromPrizePoolToOwner(uint amount) onlyOwner public returns (bool) {
         return csCHIPToken.transfer(msg.sender, amount);
     }
 
