@@ -6,23 +6,26 @@ import "./CSCHIPToken.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract HiLowGame is Ownable {
-    uint256 public multiplier = 2;
-    uint256 randNonce = 0;
-    CSCHIPToken csCHIPToken;
+    bool private isTest = false;
+    uint private randNonce = 0;
+    CSCHIPToken private csCHIPToken;
 
-    event EndGame(address winner, uint256 betSize);
+    event EndGame(address winner, uint betSize);
 
-    constructor(address tokenAddress) {
+    constructor(address tokenAddress, bool _isTest) {
         csCHIPToken = CSCHIPToken(tokenAddress);
+        isTest = _isTest;
+        
     }
 
-    function play(bool isHigher, uint256 betSize) public returns (address rWinner, uint256 rBetSize) {
-        uint256 allowance = csCHIPToken.allowance(msg.sender, address(this));
+    function play(bool isHigher, uint betSize) public returns (address rWinner, uint rBetSize) {
+        uint allowance = csCHIPToken.allowance(msg.sender, address(this));
         require(allowance >= betSize, "Check the token allowance");
-        uint256 balaceOfPool = csCHIPToken.balanceOf(address(this));
+        uint balaceOfPool = csCHIPToken.balanceOf(address(this));
         require(balaceOfPool >= betSize, "Pool doesn't have enough CSCHIPs");
-        
-        uint256 random = _randMod(10, allowance + balaceOfPool + betSize);
+
+        uint seed = allowance + balaceOfPool + betSize;
+        uint random = _randMod(1, 10000, seed);
         bool isPlayerWin = isHigher ? random >= 5 : random <= 4;
         bool sent = false;
         address winner;
@@ -38,29 +41,44 @@ contract HiLowGame is Ownable {
         return (winner, betSize);
     }
 
-    function getRewardPool() public view returns (uint256) {
+    function getRewardPool() public view returns (uint) {
         return csCHIPToken.balanceOf(msg.sender);
-    }
-
-    function setMultiplier(uint256 _multiplier) public onlyOwner {
-        multiplier = _multiplier;
     }
 
     function setToken(address _tokenAddress) public onlyOwner {
         csCHIPToken = CSCHIPToken(_tokenAddress);
     }
 
-    function _randMod(uint256 _modulus, uint256 seed) private returns (uint256) {
-        // increase nonce
+    function _getAndSetRandomNonce(uint seed) private returns (uint) {
         randNonce = randNonce + (randNonce + seed) % 10000;
-        if (randNonce > 10000000) {
+        if (randNonce > 100000000) {
             randNonce = (randNonce + seed) % 10000;
         }
+        return randNonce;
+    }
+
+    function _randMod(uint from, uint to, uint seed) private view returns (uint) {
         return
-            uint256(
+            (uint(
                 keccak256(
-                    abi.encodePacked(block.timestamp, msg.sender, randNonce, seed)
+                    abi.encodePacked(_getBlockDifficulty(10), _getBlockTimestamp(10), msg.sender, seed)
                 )
-            ) % _modulus;
+            ) % to) + from;
+    }
+
+    function _getBlockTimestamp(uint mock) private view returns (uint) {
+        return (isTest == true) ? mock : block.timestamp;
+    }
+
+    function _getBlockDifficulty(uint mock) private view returns (uint) {
+        return (isTest == true) ? mock : block.difficulty;
+    }
+
+    function getRandNonce() public view returns (uint) {
+        return randNonce;
+    }
+
+    function getIsTest() public view returns (bool) {
+        return isTest;
     }
 }
