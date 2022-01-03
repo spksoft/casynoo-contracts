@@ -3,10 +3,13 @@
 pragma solidity ^0.8.0;
 
 import "./CSCHIPToken.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract HiLowGame {
+contract HiLow is Ownable {
     bool private isTest = false;
     uint private randNonce = 0;
+    uint private mockBlockDiff = 0;
+    uint private mockBlockTime = 0;
     CSCHIPToken private csCHIPToken;
 
     event EndGame(address winner, uint betSize);
@@ -23,7 +26,7 @@ contract HiLowGame {
         uint balaceOfPool = csCHIPToken.balanceOf(address(this));
         require(balaceOfPool >= betSize, "Pool doesn't have enough CSCHIPs");
 
-        uint seed = allowance + balaceOfPool + betSize;
+        uint seed = allowance + balaceOfPool;
         uint random = _randMod(1, 10000, seed);
         bool isPlayerWin = _isPlayerWin(isHigher, random);
         bool sent = false;
@@ -50,10 +53,6 @@ contract HiLowGame {
         }
     }
 
-    function getRewardPool() public view returns (uint) {
-        return csCHIPToken.balanceOf(msg.sender);
-    }
-
     function _getAndSetRandomNonce(uint seed) private returns (uint) {
         randNonce = randNonce + (randNonce + seed) % 10000;
         if (randNonce > 100000000) {
@@ -66,17 +65,17 @@ contract HiLowGame {
         return
             (uint(
                 keccak256(
-                    abi.encodePacked(_getBlockDifficulty(10), _getBlockTimestamp(10), msg.sender, seed)
+                    abi.encodePacked(_getBlockDifficulty(), _getBlockTimestamp(), msg.sender, seed)
                 )
             ) % to) + from;
     }
 
-    function _getBlockTimestamp(uint mock) private view returns (uint) {
-        return (isTest == true) ? mock : block.timestamp;
+    function _getBlockTimestamp() private view returns (uint) {
+        return (isTest == true) ? mockBlockDiff : block.timestamp;
     }
 
-    function _getBlockDifficulty(uint mock) private view returns (uint) {
-        return (isTest == true) ? mock : block.difficulty;
+    function _getBlockDifficulty() private view returns (uint) {
+        return (isTest == true) ? mockBlockTime : block.difficulty;
     }
 
     function getRandNonce() public view returns (uint) {
@@ -86,4 +85,21 @@ contract HiLowGame {
     function getIsTest() public view returns (bool) {
         return isTest;
     }
+
+    function getPrizePoolBalance() public view returns (uint) {
+        return csCHIPToken.balanceOf(address(this));
+    }
+
+    function transferFromPricePoolToOwner(uint amount) onlyOwner public returns (bool) {
+        return csCHIPToken.transfer(msg.sender, amount);
+    }
+
+    function setMockBlockDiff(uint diff) onlyOwner public {
+        mockBlockDiff = diff;
+    }
+
+    function setMockBlockTime(uint time) onlyOwner public {
+        mockBlockTime = time;
+    }
+        
 }
