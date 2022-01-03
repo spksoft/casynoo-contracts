@@ -26,7 +26,7 @@ contract HiLowGame is Ownable {
 
         uint seed = allowance + balaceOfPool + betSize;
         uint random = _randMod(1, 10000, seed);
-        bool isPlayerWin = isHigher ? random >= 5 : random <= 4;
+        bool isPlayerWin = _isPlayerWin(isHigher, random);
         bool sent = false;
         address winner;
         if (isPlayerWin) {
@@ -41,12 +41,18 @@ contract HiLowGame is Ownable {
         return (winner, betSize);
     }
 
-    function getRewardPool() public view returns (uint) {
-        return csCHIPToken.balanceOf(msg.sender);
+    function _isPlayerWin(bool playerPickHigher, uint randomValue) private pure returns (bool) {
+        // Player pick: 0 = Lower, 1 = Higher
+        // Result 0 = Lower, 1 = Higher
+        if (playerPickHigher == true) {
+            return randomValue > 5000 ? true : false;
+        } else {
+            return randomValue <= 5000 ? true : false;
+        }
     }
 
-    function setToken(address _tokenAddress) public onlyOwner {
-        csCHIPToken = CSCHIPToken(_tokenAddress);
+    function getRewardPool() public view returns (uint) {
+        return csCHIPToken.balanceOf(msg.sender);
     }
 
     function _getAndSetRandomNonce(uint seed) private returns (uint) {
