@@ -3,9 +3,8 @@
 pragma solidity ^0.8.0;
 
 import "./CSCHIPToken.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract HiLowGame is Ownable {
+contract HiLowGame {
     bool private isTest = false;
     uint private randNonce = 0;
     CSCHIPToken private csCHIPToken;
